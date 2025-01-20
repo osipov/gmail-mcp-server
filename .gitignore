@@ -6,7 +6,7 @@ dist/
 wheels/
 *.egg-info
 *.DS_Store
-mcp_agent.secrets.yaml.example
+mcp_agent.secrets.yaml
 
 # Virtual environments
 .venv
