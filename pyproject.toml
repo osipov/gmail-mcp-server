@@ -11,7 +11,9 @@ dependencies = [
     "google-auth-httplib2>=0.2.0",
     "google-auth-oauthlib>=1.2.1",
     "streamlit>=1.41.1",
-    "mcp-agent>=0.0.1",
+    "mcp>=1.2.0rc1",
+    "mcp-agent>=0.0.3",
+    "anthropic>=0.43.1",
 ]
 [build-system]
 requires = [ "hatchling",]

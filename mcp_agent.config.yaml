@@ -1,4 +1,4 @@
-$schema: ../schema/mcp-agent.config.schema.json
+$schema: schema/mcp-agent.config.schema.json
 
 execution_engine: asyncio
 logger:
@@ -14,8 +14,7 @@ logger:
 mcp:
   servers:
     gmail:
-    filesystem:
-      command: "uv run"
+      command: "uv"
       args:
         [
           "--directory",
@@ -28,8 +27,8 @@ mcp:
           "/Users/jasonsummer/.google/token_creds.json"
         ]
 
-openai:
-  # Secrets (API keys, etc.) are stored in an mcp_agent.secrets.yaml file which can be gitignored
-  default_model: gpt-4o
+# openai:
+#   # Secrets (API keys, etc.) are stored in an mcp_agent.secrets.yaml file which can be gitignored
+#   default_model: gpt-4o
 anthropic:
   default_model: claude-3.5-sonnet

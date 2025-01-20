@@ -246,7 +246,7 @@ class GmailService:
             logger.info(f"Email read: {email_id}")
             
             # We want to mark email as read once we read it
-            await self.mark_email_as_read(email_id)
+            # await self.mark_email_as_read(email_id)
 
             return email_metadata
         except HttpError as error:
@@ -392,8 +392,8 @@ async def main(creds_file_path: str,
                 description="Retrieve unread emails",
                 inputSchema={
                     "type": "object",
-                    "properties": {"":""},
-                    "required": None
+                    "properties": {},
+                    "required": []
                 },
             ),
             types.Tool(
@@ -475,7 +475,8 @@ async def main(creds_file_path: str,
         if name == "get-unread-emails":
                 
             unread_emails = await gmail_service.get_unread_emails()
-            return [types.TextContent(type="text", text=str(unread_emails),artifact={"type": "json", "data": unread_emails} )]
+            # return [types.TextContent(type="text", text=str(unread_emails),artifact={"type": "json", "data": unread_emails} )]
+            return [types.TextContent(type="text", text=str(unread_emails))]
         
         if name == "read-email":
             email_id = arguments.get("email_id")
@@ -483,7 +484,9 @@ async def main(creds_file_path: str,
                 raise ValueError("Missing email ID parameter")
                 
             retrieved_email = await gmail_service.read_email(email_id)
-            return [types.TextContent(type="text", text=str(retrieved_email),artifact={"type": "dictionary", "data": retrieved_email} )]
+            # return [types.TextContent(type="text", text=str(retrieved_email),artifact={"type": "dictionary", "data": retrieved_email} )]
+            return [types.TextContent(type="text", text=str(retrieved_email))]
+        
         if name == "open-email":
             email_id = arguments.get("email_id")
             if not email_id:
@@ -491,6 +494,7 @@ async def main(creds_file_path: str,
                 
             msg = await gmail_service.open_email(email_id)
             return [types.TextContent(type="text", text=str(msg))]
+        
         if name == "trash-email":
             email_id = arguments.get("email_id")
             if not email_id:
@@ -498,6 +502,7 @@ async def main(creds_file_path: str,
                 
             msg = await gmail_service.trash_email(email_id)
             return [types.TextContent(type="text", text=str(msg))]
+        
         if name == "mark-email-as-read":
             email_id = arguments.get("email_id")
             if not email_id:
