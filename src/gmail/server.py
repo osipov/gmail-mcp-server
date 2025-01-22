@@ -206,6 +206,8 @@ class GmailService:
                 response = self.service.users().messages().list(userId=user_id, q=query,
                                                     pageToken=page_token).execute()
                 messages.extend(response['messages'])
+            if len(messages) == 0:
+                return "There are no unread emails."
             return messages
 
         except HttpError as error:
