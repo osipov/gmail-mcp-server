@@ -23,6 +23,7 @@ async def get_gmail_agent():
             Your job is to execute email tasks based on a user's request.
             Based on the user's request make the appropriate tool calls.""",
             server_names=["gmail"],
+            connection_persistence=False,
         )
         await gmail_agent.initialize()
         st.session_state["agent"] = gmail_agent
@@ -70,7 +71,6 @@ async def main():
             st.markdown(response)
 
         st.session_state["messages"].append({"role": "assistant", "content": response})
-    st.write(st.session_state.messages)
 
 if __name__ == "__main__":
     asyncio.run(main())
