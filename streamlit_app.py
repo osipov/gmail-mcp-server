@@ -1,6 +1,9 @@
+from typing import Optional
+import asyncio
+import time
+
 from mcp import ListToolsResult
 import streamlit as st
-import asyncio
 from mcp_agent.app import MCPApp
 from mcp_agent.agents.agent import Agent
 from mcp_agent.workflows.llm.augmented_llm_anthropic import AnthropicAugmentedLLM
@@ -9,25 +12,20 @@ from mcp_agent.human_input.types import (
     HumanInputResponse,
 )
 
-def streamlit_input_callback(request: HumanInputRequest) -> HumanInputResponse:
-    """Request input from a human user via Streamlit."""
-    # Display the description if available
-    if request.description:
-        st.info(f"**[HUMAN INPUT NEEDED]** {request.description}")
+async def streamlit_input_callback(request: HumanInputRequest) -> HumanInputResponse:
+    if st.session_state.get("tool_approval", False):
+        response = "Approved."
+    else:
+        response = "Denied."
+    
+    return HumanInputResponse(request_id=request.request_id, response=response)
 
-    # Display the prompt
-    response = st.text_input(request.prompt, key=request.request_id)
 
-    # A submit button to finalize the input
-    if st.button("Submit", key=f"submit_{request.request_id}"):
-        if response.strip():
-            return HumanInputResponse(request_id=request.request_id, response=response.strip())
-        else:
-            st.error("Response cannot be empty. Please enter a valid response.")
-
-    # Return None to indicate that no response has been finalized yet
-    st.warning("Awaiting response...")
-    return None
+def request_permission():
+    if st.button("Approve"):
+        st.session_state['permission_granted'] = True
+    if st.button("Deny"):
+        st.session_state['permission_granted'] = False
 
 # Initialize the MCPApp at module level
 app = MCPApp(name="gmail_agent", human_input_callback=streamlit_input_callback)
@@ -38,10 +36,6 @@ def format_list_tools_result(list_tools_result: ListToolsResult):
         res += f"- **{tool.name}**: {tool.description}\n\n"
     return res
 
-def get_user_feedback():
-    selected = st.feedback("thumbs")
-    return bool(selected)
-
 
 async def get_gmail_agent():
     """Get existing agent from session state or create a new one"""
@@ -51,10 +45,11 @@ async def get_gmail_agent():
             instruction="""You are an agent with access to a specific Gmail account.
             Your job is to execute email tasks based on a user's request.
             Based on the user's request make the appropriate tool calls.
-            Always request permission from the user before sending any emails.
-            To ask the user for permission, use the tool that requests customer/human input.""",
+            Always check human input before sending or removing any emails.
+            """,
             server_names=["gmail"],
             connection_persistence=False,
+            # functions=[request_permission],
             human_input_callback=streamlit_input_callback,
         )
         await gmail_agent.initialize()
@@ -68,6 +63,11 @@ async def get_gmail_agent():
 async def main():
     # Initialize app
     await app.initialize()
+
+    with st.sidebar:
+        _ = st.toggle("Approve Tool Usage",
+                  key="tool_approval",
+                  value=True)
     
     # Get or create agent and LLM
     agent, llm = await get_gmail_agent()
@@ -96,13 +96,29 @@ async def main():
         with st.chat_message("assistant"):
             response = ""
             with st.spinner("Thinking..."):
-                response = await llm.generate_str(
+                response = await llm.generate(
                     message=prompt,
-                    use_history=True
+                    use_history=True,
+                    parallel_tool_calls=False,
                 )
-            st.markdown(response)
+                
+                placeholder = st.empty()
+                for msg in response:
+                    if msg.stop_reason == "tool_use":
+                        for c in msg.content:
+                            if c.type == "tool_use":
+                                placeholder.write(f"Calling tool: {c.name}")
+                                
+                    else:
+                        text_response = ''
+                        for c in msg.content:
+                            placeholder.write(c.text)
+                            text_response += c.text
+                        st.session_state["messages"].append({"role": "assistant", "content": text_response})
+                            
+        st.rerun()
 
-        st.session_state["messages"].append({"role": "assistant", "content": response})
+        # st.session_state["messages"].append({"role": "assistant", "content": response})
 
 if __name__ == "__main__":
     asyncio.run(main())

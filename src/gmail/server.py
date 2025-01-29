@@ -186,6 +186,19 @@ class GmailService:
             return "Email opened in browser successfully."
         except HttpError as error:
             return f"An HttpError occurred: {str(error)}"
+        
+    # def request_permission(self, task: str) -> str:
+    #     import streamlit as st
+    #     """Requests permission from user before executing task."""
+    #     try:
+    #         # Display the request
+    #         st.write(f"**Request:** {task}")
+    #         if st.button("Approve"):
+    #             return "Approved"
+    #         if st.button("Deny"):
+    #             return "Denied"
+    #     except HttpError as error:
+    #         return f"An HttpError occurred: {str(error)}"
 
     async def get_unread_emails(self) -> list[dict[str, str]]| str:
         """
@@ -440,6 +453,20 @@ async def main(creds_file_path: str,
                     "required": ["email_id"],
                 },
             ),
+            # types.Tool(
+            #     name="request-permission",
+            #     description="Requests permission from user before executing task",
+            #     inputSchema={
+            #         "type": "object",
+            #         "properties": {
+            #             "task": {
+            #                 "type": "string",
+            #                 "description": "Task description",
+            #             },
+            #         },
+            #         "required": ["task"],
+            #     },
+            # ),
         ]
 
     @server.call_tool()
@@ -496,6 +523,14 @@ async def main(creds_file_path: str,
                 
             msg = await gmail_service.open_email(email_id)
             return [types.TextContent(type="text", text=str(msg))]
+        
+        # if name == "request-permission":
+        #     task = arguments.get("task")
+        #     if not task:
+        #         raise ValueError("Missing task parameter")
+                
+        #     msg = gmail_service.request_permission(task)
+        #     return [types.TextContent(type="text", text=str(msg))]
         
         if name == "trash-email":
             email_id = arguments.get("email_id")
