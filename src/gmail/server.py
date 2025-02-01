@@ -392,8 +392,8 @@ async def main(creds_file_path: str,
                 description="Retrieve unread emails",
                 inputSchema={
                     "type": "object",
-                    "properties": {"":""},
-                    "required": None
+                    "properties": {},
+                    "required": []
                 },
             ),
             types.Tool(
